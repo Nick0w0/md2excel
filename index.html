@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Markdown表格转换工具</title>
+  
+  <!-- 引入字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- 外部依赖 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
+  <!-- 自定义样式 -->
+  <link rel="stylesheet" href="css/styles.css?v=1.0.1">
+  
+  <!-- 自定义脚本 -->
+  <script src="src/js/theme.js?v=1.0.1"></script>
+  <script src="src/js/ui.js?v=1.0.1"></script>
+  <script src="src/js/md2excel.js?v=1.0.1"></script>
+  <script src="src/js/excel2md.js?v=1.0.1"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo-container">
+        <div class="logo">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+        </div>
+        <h1>Markdown表格转换工具</h1>
+      </div>
+      <p class="subtitle">轻松在 Markdown 与 Excel 表格之间转换</p>
+      
+      <div class="tabs">
+        <div id="md2excelTab" class="tab">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+          Markdown → Excel
+        </div>
+        <div id="excel2mdTab" class="tab">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          Excel → Markdown
+        </div>
+      </div>
+    </header>
+    
+    <main>
+      <!-- Markdown转Excel部分 -->
+      <section id="md2excelContent" class="tab-content">
+        <div class="grid">
+          <div class="card input-card">
+            <h2>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              输入
+            </h2>
+            
+            <div id="dropzone" class="dropzone">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <p>拖放 Markdown 文件或点击此处上传</p>
+              <input type="file" id="fileInput" accept=".md,.txt" class="hidden" />
+            </div>
+            
+            <textarea id="markdownInput" placeholder="在此粘贴 Markdown 表格内容..."></textarea>
+            
+            <div class="form-controls">
+              <div class="options-group">
+                <h3>选项</h3>
+                <div class="checkbox-group">
+                  <input type="checkbox" id="hasHeaders" checked />
+                  <label for="hasHeaders">第一行作为表头</label>
+                </div>
+                
+                <div class="checkbox-group">
+                  <input type="checkbox" id="skipHeaderSeparator" checked />
+                  <label for="skipHeaderSeparator">跳过分隔行（---|---）</label>
+                </div>
+                
+                <div class="checkbox-group">
+                  <input type="checkbox" id="multiTableMode" />
+                  <label for="multiTableMode">多表格模式（检测多个表格并分别放入不同工作表）</label>
+                </div>
+              </div>
+              
+              <div class="options-group">
+                <h3>输出设置</h3>
+                <div class="form-group">
+                  <label for="excelFilename">Excel 文件名</label>
+                  <input type="text" id="excelFilename" value="table_data" />
+                </div>
+                
+                <div class="form-group">
+                  <label for="worksheetName">工作表名称</label>
+                  <input type="text" id="worksheetName" value="表格数据" />
+                </div>
+              </div>
+              
+              <button id="processBtn" class="btn-block" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                处理
+              </button>
+            </div>
+          </div>
+          
+          <div class="card output-card">
+            <h2>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              输出
+            </h2>
+            <div id="output">
+              <div class="instruction">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <p>在左侧输入 Markdown 表格内容以查看结果</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Excel转Markdown部分 -->
+      <section id="excel2mdContent" class="tab-content">
+        <div class="grid">
+          <div class="card input-card">
+            <h2>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+              输入
+            </h2>
+            
+            <div id="excelDropzone" class="dropzone">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <p>拖放 Excel 文件或点击此处上传</p>
+              <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" class="hidden" />
+            </div>
+            
+            <div class="form-controls">
+              <div class="options-group">
+                <h3>选项</h3>
+                <div class="form-group">
+                  <label for="worksheetIndex">工作表索引（0 开始）</label>
+                  <input type="number" id="worksheetIndex" value="0" min="0" />
+                </div>
+                
+                <div class="checkbox-group">
+                  <input type="checkbox" id="excelHasHeaders" checked />
+                  <label for="excelHasHeaders">第一行作为表头</label>
+                </div>
+              </div>
+              
+              <button id="convertToMdBtn" class="btn-block" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                转换为 Markdown
+              </button>
+            </div>
+          </div>
+          
+          <div class="card output-card">
+            <h2>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              输出
+            </h2>
+            <div id="mdOutput">
+              <div class="instruction">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <p>在左侧上传 Excel 文件以查看结果</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    
+    <footer>
+      <p>使用 <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript" target="_blank" rel="noopener noreferrer">JavaScript</a>, <a href="https://github.com/exceljs/exceljs" target="_blank" rel="noopener noreferrer">ExcelJS</a> 和 <a href="https://github.com/eligrey/FileSaver.js" target="_blank" rel="noopener noreferrer">FileSaver.js</a> 构建</p>
+      <div class="footer-links">
+        <a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <span class="divider">|</span>
+        <a href="#" id="aboutLink">关于</a>
+      </div>
+    </footer>
+  </div>
+  
+  <!-- 关于对话框 -->
+  <div id="aboutDialog" class="dialog hidden">
+    <div class="dialog-content">
+      <h2>关于 Markdown 表格转换工具</h2>
+      <p>这是一个纯前端应用，支持在 Markdown 表格和 Excel 表格之间进行转换。</p>
+      <p>功能特性：</p>
+      <ul>
+        <li>Markdown 转 Excel，支持多表格</li>
+        <li>Excel 转 Markdown，支持选择工作表</li>
+        <li>明暗主题切换，响应系统设置</li>
+        <li>完全基于浏览器处理，无服务器需求</li>
+      </ul>
+      <button id="closeAboutBtn" class="btn">关闭</button>
+    </div>
+  </div>
+  
+  <!-- 添加关于对话框脚本 -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const aboutLink = document.getElementById('aboutLink');
+      const aboutDialog = document.getElementById('aboutDialog');
+      const closeAboutBtn = document.getElementById('closeAboutBtn');
+      
+      if (aboutLink && aboutDialog && closeAboutBtn) {
+        aboutLink.addEventListener('click', function(e) {
+          e.preventDefault();
+          aboutDialog.classList.remove('hidden');
+        });
+        
+        closeAboutBtn.addEventListener('click', function() {
+          aboutDialog.classList.add('hidden');
+        });
+        
+        // 点击对话框外部关闭
+        aboutDialog.addEventListener('click', function(e) {
+          if (e.target === aboutDialog) {
+            aboutDialog.classList.add('hidden');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html> 

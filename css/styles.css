@@ -1,0 +1,714 @@
+:root {
+  --primary-color: #3b82f6;
+  --primary-hover: #2563eb;
+  --bg-light: #f9fafb;
+  --bg-dark: #1f2937;
+  --text-light: #374151;
+  --text-dark: #f3f4f6;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --transition: all 0.3s ease;
+}
+
+/* 深色模式变量 */
+[data-theme="dark"] {
+  --background-color: var(--bg-dark);
+  --text-color: var(--text-dark);
+  --border-color: #374151;
+  --card-bg: #2d3748;
+  --input-bg: #1a202c;
+  --hover-bg: #4a5568;
+  --shadow-color: rgba(0, 0, 0, 0.4);
+}
+
+/* 浅色模式变量 */
+[data-theme="light"] {
+  --background-color: var(--bg-light);
+  --text-color: var(--text-light);
+  --border-color: #e5e7eb;
+  --card-bg: #ffffff;
+  --input-bg: #f9fafb;
+  --hover-bg: #f3f4f6;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: var(--transition);
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.logo {
+  margin-right: 0.75rem;
+  color: var(--primary-color);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+h2 svg {
+  margin-right: 0.5rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+.subtitle {
+  color: var(--text-color);
+  opacity: 0.8;
+  margin-bottom: 1.5rem;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 2rem;
+  justify-content: center;
+}
+
+.tab {
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  transition: var(--transition);
+  margin: 0 0.5rem;
+}
+
+.tab svg {
+  margin-right: 0.5rem;
+}
+
+.tab:hover {
+  color: var(--primary-color);
+}
+
+.tab.active {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+  font-weight: 500;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.card {
+  background-color: var(--card-bg);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: var(--transition);
+}
+
+.input-card {
+  border-top: 3px solid var(--primary-color);
+}
+
+.output-card {
+  border-top: 3px solid #10b981; /* 绿色 */
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.dropzone {
+  border: 2px dashed var(--border-color);
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 0.75rem;
+  margin-bottom: 1.5rem;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropzone svg {
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+  opacity: 0.7;
+}
+
+.dropzone:hover {
+  border-color: var(--primary-color);
+  background-color: var(--hover-bg);
+}
+
+.dropzone.dragover {
+  border-color: var(--primary-color);
+  background-color: var(--hover-bg);
+}
+
+textarea, input[type="text"], input[type="number"] {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  font-family: inherit;
+  transition: var(--transition);
+}
+
+textarea {
+  height: 200px;
+  resize: vertical;
+  margin-bottom: 1.5rem;
+}
+
+textarea:focus, input[type="text"]:focus, input[type="number"]:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.form-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.options-group {
+  background-color: var(--input-bg);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.checkbox-group:last-child {
+  margin-bottom: 0;
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin-right: 0.5rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+}
+
+.checkbox-group label {
+  margin-bottom: 0;
+  font-weight: 400;
+}
+
+button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  background-color: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  font-weight: 500;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button svg {
+  margin-right: 0.5rem;
+}
+
+button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-block {
+  display: block;
+  width: 100%;
+}
+
+.output-table {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background-color: var(--hover-bg);
+}
+
+th, td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+.btn-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.mt-4 {
+  margin-top: 1.5rem;
+}
+
+/* 主题切换按钮 */
+.theme-switch {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background-color: var(--card-bg);
+  border-radius: 50%;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+  border: none;
+  padding: 0;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.theme-switch-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 50%;
+}
+
+.theme-switch::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary-color), #4f46e5);
+  opacity: 0;
+  border-radius: 50%;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.theme-switch:hover {
+  transform: translateY(-3px) rotate(15deg);
+  box-shadow: 0 10px 15px -3px var(--shadow-color);
+}
+
+.theme-switch:hover::before {
+  opacity: 0.15;
+}
+
+.theme-switch:active {
+  transform: translateY(0) rotate(0);
+}
+
+.moon-icon, .sun-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center;
+  transition: opacity 0.3s ease, transform 0.5s ease;
+  color: var(--primary-color);
+}
+
+.moon-icon {
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(-30deg) scale(0.7);
+}
+
+.sun-icon {
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(30deg) scale(0.7);
+}
+
+[data-theme="dark"] .moon-icon {
+  opacity: 0;
+}
+
+[data-theme="dark"] .sun-icon {
+  opacity: 1;
+  transform: translate(-50%, -50%) rotate(0) scale(1);
+}
+
+[data-theme="light"] .moon-icon {
+  opacity: 1;
+  transform: translate(-50%, -50%) rotate(0) scale(1);
+}
+
+[data-theme="light"] .sun-icon {
+  opacity: 0;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.instruction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  text-align: center;
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+.instruction svg {
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+}
+
+/* 错误和警告样式 */
+.error, .warning {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.error {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-left: 4px solid #ef4444;
+  color: #ef4444;
+}
+
+.warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-left: 4px solid #f59e0b;
+  color: #f59e0b;
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  box-shadow: var(--shadow-md);
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from { transform: translate(-50%, -20px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.warning.fade-out {
+  animation: fadeOut 1s ease;
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.close-button {
+  margin-left: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: inherit;
+  padding: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.close-button:hover {
+  background: none;
+  opacity: 0.7;
+}
+
+/* 表格选项卡样式 */
+.table-tabs {
+  justify-content: flex-start;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 1rem;
+}
+
+.table-tabs .tab {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* 多表格内容样式 */
+.multi-tables .tab-content {
+  display: none;
+}
+
+.multi-tables .tab-content.active {
+  display: block;
+}
+
+/* 确保多表格内容不受全局tab-content影响 */
+#md2excelContent.tab-content .multi-tables .tab-content,
+#excel2mdContent.tab-content .multi-tables .tab-content {
+  display: none;
+}
+
+#md2excelContent.tab-content .multi-tables .tab-content.active,
+#excel2mdContent.tab-content .multi-tables .tab-content.active {
+  display: block;
+}
+
+/* 加载中动画 */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(59, 130, 246, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--primary-color);
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 预览样式 */
+.preview {
+  margin-top: 1rem;
+  overflow-x: auto;
+}
+
+pre {
+  background-color: var(--input-bg);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  font-family: monospace;
+  margin-bottom: 1rem;
+}
+
+/* 页脚样式 */
+footer {
+  text-align: center;
+  margin-top: 3rem;
+  padding: 1rem 0;
+  font-size: 0.875rem;
+  color: var(--text-color);
+  opacity: 0.7;
+  border-top: 1px solid var(--border-color);
+}
+
+.footer-links {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.footer-links a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+}
+
+.divider {
+  color: var(--text-color);
+  opacity: 0.5;
+}
+
+/* 对话框样式 */
+.dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog-content {
+  background-color: var(--card-bg);
+  border-radius: 0.75rem;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: var(--shadow-md);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.dialog h2 {
+  margin-bottom: 1rem;
+}
+
+.dialog p {
+  margin-bottom: 1rem;
+}
+
+.dialog ul {
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.dialog li {
+  margin-bottom: 0.5rem;
+}
+
+.dialog button {
+  margin-top: 1rem;
+}
+
+.multi-tables {
+  margin-top: 1rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.multi-tables h3 {
+  margin-bottom: 1rem;
+}
+
+/* 页脚链接统一样式 */
+footer a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+footer a:hover {
+  text-decoration: underline;
+  color: var(--primary-hover);
+}
+
+/* 暗色模式下的链接颜色调整 */
+[data-theme="dark"] footer a {
+  color: #60a5fa; /* 更明亮的蓝色 */
+}
+
+[data-theme="dark"] footer a:hover {
+  color: #93c5fd; /* 悬停时更亮的蓝色 */
+} 

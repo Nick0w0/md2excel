@@ -1,0 +1,17 @@
+{
+  "name": "md2excel",
+  "version": "1.0.0",
+  "description": "Markdown表格与Excel互相转换工具",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server -p 8080 -c-1 -o",
+    "build": "uglifyjs src/js/md2excel.js src/js/excel2md.js -o js/app.min.js"
+  },
+  "keywords": ["markdown", "excel", "table", "converter"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "uglify-js": "^3.17.4"
+  }
+} 
