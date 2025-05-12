@@ -1,102 +1,74 @@
-# Markdown表格转换工具
+# Markdown表格转换工具 (MD2Excel)
 
-一个纯前端应用，支持在Markdown表格和Excel表格之间进行转换的工具。
+[![English](https://img.shields.io/badge/EN-English-blue)](README.en.md)
+
+一个纯前端应用，用于在Markdown表格和Excel表格之间轻松转换。无需服务器，完全在浏览器中处理，支持离线使用。
 
 ## 功能特性
 
-### Markdown 转 Excel
-- 粘贴或拖放上传Markdown表格内容
-- 将第一行设为表头的选项
-- 跳过分隔行（---|---）的选项
-- 多表格模式支持（将多个表格分别放入不同工作表）
-- 自定义Excel文件名和工作表名称
-- 复制HTML表格到剪贴板
-- 下载为Excel文件
+### Markdown转Excel
+- 支持单表格和多表格模式
+- 自动检测多个表格并分别放入不同工作表
+- 可配置是否使用第一行作为表头
+- 可跳过Markdown表格中的分隔行（---|---）
+- 生成美观的Excel文件，自动调整列宽
+- 实时预览转换结果
 
-### Excel 转 Markdown
-- 拖放上传Excel文件
-- 选择特定工作表
-- 将第一行作为表头的选项
-- 复制Markdown表格到剪贴板
+### Excel转Markdown
+- 支持.xlsx、.xls和.csv格式
+- 自动检测多个工作表
+- 可配置是否使用第一行作为表头
+- 生成格式化的Markdown表格
+- 支持一键复制和下载结果
+- 显示表格元数据（行数、列数等）
 
 ### 其他功能
-- 明暗主题切换（响应系统主题设置）
-- 完全基于浏览器的处理，无服务器需求
-- 响应式设计，适配不同屏幕尺寸
+- 明暗主题切换，自动响应系统设置
+- 响应式设计，适配桌面和移动设备
+- 拖放文件上传，简化操作流程
+- 提供直观的用户界面和交互反馈
+- 完全开源，可自由扩展功能
 
-## 如何使用
+## 使用方法
 
-### 方法1：直接打开HTML文件
-最简单的方法是直接在文件浏览器中双击`index.html`文件打开。
+### 在线使用
+访问[在线演示](https://nick0w0.github.io/md2excel/)即可使用，无需安装。
 
-### 方法2：使用HTTP服务器（推荐）
-1. 确保安装了Node.js
-2. 克隆或下载本仓库
-3. 在项目目录中运行：
+### 本地部署
+1. 克隆仓库
+   ```bash
+   git clone https://github.com/Nick0w0/md2excel.git
    ```
-   node start.js
+
+2. 进入项目目录
+   ```bash
+   cd md2excel
    ```
-4. 浏览器将自动打开，访问地址：http://localhost:8080
 
-## 项目结构
+3. 安装依赖（可选）
+   ```bash
+   npm install
+   ```
 
-```
-md2excel/
-│
-├── index.html              # 主HTML文件
-├── start.js                # 启动HTTP服务器的脚本
-├── package.json            # 项目依赖配置
-│
-├── css/                    # 样式文件
-│   └── styles.css          # 主样式表
-│
-└── src/                    # 源代码
-    └── js/                 # JavaScript源文件
-        ├── md2excel.js     # Markdown转Excel功能
-        ├── excel2md.js     # Excel转Markdown功能
-        ├── theme.js        # 主题切换功能
-        └── ui.js           # UI初始化和管理
-```
+4. 启动本地服务器
+   ```bash
+   npm start
+   ```
 
-## 开发
-
-### 安装依赖
-```
-npm install
-```
-
-### 启动开发服务器
-```
-node start.js
-```
-
-### 构建发布版本
-```
-npm run build
-```
+5. 打开浏览器访问 `http://localhost:8080`
 
 ## 技术栈
-- HTML/CSS/JavaScript
-- ExcelJS（Excel文件生成）
-- FileSaver.js（文件下载）
-- SheetJS（Excel文件解析）
 
-## 故障排除
+- 纯原生JavaScript，无框架依赖
+- ExcelJS - Excel文件处理
+- FileSaver.js - 文件下载功能
+- SheetJS (XLSX) - Excel解析
 
-如果遇到问题，请尝试以下步骤：
 
-1. **按钮点击无响应**：
-   - 请确保JavaScript已经启用
-   - 检查控制台是否有错误
-   - 尝试刷新页面或使用不同的浏览器
+## 致谢
 
-2. **无法加载脚本**：
-   - 如果使用HTTP服务器访问，确保路径设置正确
-   - 如果直接打开HTML文件，脚本路径必须是相对路径
+本项目得以实现，离不开以下开源项目的支持：
 
-3. **无法导出Excel文件**：
-   - 确保ExcelJS和FileSaver.js库成功加载
-   - 尝试清除浏览器缓存后重试
-
-## 许可证
-MIT 
+- [ExcelJS](https://github.com/exceljs/exceljs) - 提供强大的Excel文件操作能力
+- [FileSaver.js](https://github.com/eligrey/FileSaver.js) - 实现客户端文件保存功能
+- [SheetJS](https://github.com/SheetJS/sheetjs) - 提供优秀的电子表格解析能力

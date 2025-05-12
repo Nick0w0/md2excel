@@ -15,11 +15,21 @@ const UI = (function() {
     // 初始化选项卡
     initTabs();
     
+    // 从URL解析选项卡
+    parseTabFromURL();
+    
     // 添加CSS加载检测
     ensureStylesLoaded();
     
     // 检查外部库
     checkExternalLibraries();
+    
+    // 如果已加载国际化模块，在翻译UI后更新选项卡
+    if (typeof I18n !== 'undefined' && I18n.translateUI) {
+      setTimeout(() => {
+        I18n.translateUI();
+      }, 100);
+    }
   }
   
   /**
@@ -64,14 +74,77 @@ const UI = (function() {
       md2excelTab.classList.add('active');
       md2excelContent.classList.add('active');
       
+      // 清除excel2md的输出内容
+      resetExcel2MdOutput();
+      
       // 从URL中移除excel2md参数
       updateURLParams('tab', 'md2excel');
     } else if (tabId === 'excel2md') {
       excel2mdTab.classList.add('active');
       excel2mdContent.classList.add('active');
       
+      // 清除md2excel的输出内容
+      resetMd2ExcelOutput();
+      
       // 添加excel2md参数到URL
       updateURLParams('tab', 'excel2md');
+    }
+    
+    // 确保语言一致性
+    setTimeout(() => {
+      if (typeof I18n !== 'undefined' && I18n.translateInstructionTexts) {
+        I18n.translateInstructionTexts();
+      }
+    }, 50);
+  }
+  
+  /**
+   * 重置MD2Excel输出区域
+   */
+  function resetMd2ExcelOutput() {
+    // 如果MD2Excel模块可用，调用其reset函数
+    if (typeof MD2Excel !== 'undefined' && MD2Excel.reset) {
+      MD2Excel.reset();
+    } else {
+      // 否则只重置输出容器
+      const outputContainer = document.getElementById('output');
+      if (outputContainer) {
+        outputContainer.innerHTML = `
+          <div class="instruction">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <p>在左侧输入 Markdown 表格内容以查看结果</p>
+          </div>
+        `;
+      }
+    }
+  }
+  
+  /**
+   * 重置Excel2MD输出区域
+   */
+  function resetExcel2MdOutput() {
+    // 如果Excel2MD模块可用，调用其reset函数
+    if (typeof Excel2MD !== 'undefined' && Excel2MD.reset) {
+      Excel2MD.reset();
+    } else {
+      // 否则只重置输出容器
+      const outputContainer = document.getElementById('mdOutput');
+      if (outputContainer) {
+        outputContainer.innerHTML = `
+          <div class="instruction">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <p>在左侧上传 Excel 文件以查看结果</p>
+          </div>
+        `;
+      }
     }
   }
   

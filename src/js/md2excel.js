@@ -15,6 +15,9 @@ const MD2Excel = (function() {
   let dropzone;
   let fileInput;
   
+  // 使用英文作为默认工作表名称
+  const DEFAULT_WORKSHEET_NAME = 'Table Data';
+  
   /**
    * 初始化模块
    */
@@ -31,6 +34,9 @@ const MD2Excel = (function() {
     dropzone = document.getElementById('dropzone');
     fileInput = document.getElementById('fileInput');
     
+    // 重置数据
+    reset();
+    
     // 绑定事件
     if (markdownInput) {
       markdownInput.addEventListener('input', updateProcessButton);
@@ -46,6 +52,43 @@ const MD2Excel = (function() {
     
     // 初始化按钮状态
     updateProcessButton();
+  }
+  
+  /**
+   * 重置模块数据
+   */
+  function reset() {
+    // 清空数据
+    tableData = [];
+    
+    // 重置输入
+    if (markdownInput) markdownInput.value = '';
+    
+    // 重置复选框
+    if (hasHeadersCheckbox) hasHeadersCheckbox.checked = true;
+    if (skipHeaderSeparatorCheckbox) skipHeaderSeparatorCheckbox.checked = true;
+    if (multiTableModeCheckbox) multiTableModeCheckbox.checked = false;
+    
+    // 重置文件名输入
+    if (excelFilenameInput) excelFilenameInput.value = 'table_data';
+    if (worksheetNameInput) worksheetNameInput.value = DEFAULT_WORKSHEET_NAME;
+    
+    // 禁用处理按钮
+    if (processBtn) processBtn.disabled = true;
+    
+    // 重置输出区域
+    if (outputContainer) {
+      outputContainer.innerHTML = `
+        <div class="instruction">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <p>在左侧输入 Markdown 表格内容以查看结果</p>
+        </div>
+      `;
+    }
   }
   
   /**
@@ -86,7 +129,7 @@ const MD2Excel = (function() {
    */
   function handleFile(file) {
     if (!file.name.endsWith('.md') && !file.name.endsWith('.txt')) {
-      alert('请上传Markdown文件(.md)或文本文件(.txt)');
+      showMessage('请上传Markdown文件(.md)或文本文件(.txt)');
       return;
     }
     
@@ -371,10 +414,11 @@ const MD2Excel = (function() {
       tab.addEventListener('click', () => {
         // 获取选项卡ID
         const tabId = tab.getAttribute('data-tab');
-        const contentId = `table-content-${tabId.split('-')[1]}`;
-        const targetContent = document.getElementById(contentId);
+        const tabIndex = tabId.split('-')[1];
+        const contentId = `table-content-${tabIndex}`;
         
         // 确保目标内容元素存在
+        const targetContent = document.getElementById(contentId);
         if (!targetContent) {
           console.error(`找不到内容元素: ${contentId}`);
           return;
@@ -387,6 +431,8 @@ const MD2Excel = (function() {
         // 添加当前活动状态
         tab.classList.add('active');
         targetContent.classList.add('active');
+        
+        console.log(`切换到表格 ${parseInt(tabIndex) + 1}`);
       });
     });
     
@@ -403,6 +449,26 @@ const MD2Excel = (function() {
     if (exportBtn) {
       exportBtn.addEventListener('click', exportMultiTablesToExcel);
     }
+  }
+  
+  /**
+   * 显示消息
+   */
+  function showMessage(message) {
+    const messageElement = document.createElement('div');
+    messageElement.className = 'warning';
+    messageElement.textContent = message;
+    document.body.appendChild(messageElement);
+    
+    // 5秒后移除消息
+    setTimeout(() => {
+      messageElement.classList.add('fade-out');
+      setTimeout(() => {
+        if (messageElement.parentNode) {
+          messageElement.parentNode.removeChild(messageElement);
+        }
+      }, 1000);
+    }, 4000);
   }
   
   /**
@@ -427,10 +493,10 @@ const MD2Excel = (function() {
       // 清除选择
       window.getSelection().removeAllRanges();
       
-      alert('表格已复制到剪贴板');
+      showMessage('表格已复制到剪贴板');
     } catch (error) {
       console.error('复制失败:', error);
-      alert('复制失败: ' + error.message);
+      showMessage('复制失败: ' + error.message);
     }
   }
   
@@ -459,10 +525,10 @@ const MD2Excel = (function() {
       // 清除选择
       window.getSelection().removeAllRanges();
       
-      alert(`表格 ${index + 1} 已复制到剪贴板`);
+      showMessage(`表格 ${index + 1} 已复制到剪贴板`);
     } catch (error) {
       console.error('复制失败:', error);
-      alert('复制失败: ' + error.message);
+      showMessage('复制失败: ' + error.message);
     }
   }
   
@@ -476,13 +542,13 @@ const MD2Excel = (function() {
       }
       
       const filename = (excelFilenameInput.value || 'table_data') + '.xlsx';
-      const sheetName = worksheetNameInput.value || '表格数据';
+      const sheetName = worksheetNameInput.value || DEFAULT_WORKSHEET_NAME;
       const hasHeaders = hasHeadersCheckbox.checked;
       
       exportTablesToExcel(tableData, filename, [sheetName], hasHeaders);
     } catch (error) {
       console.error('导出Excel失败:', error);
-      alert('导出Excel失败: ' + error.message);
+      showMessage('导出Excel失败: ' + error.message);
     }
   }
   
@@ -496,7 +562,7 @@ const MD2Excel = (function() {
       }
       
       const baseFilename = excelFilenameInput.value || 'table_data';
-      const baseSheetName = worksheetNameInput.value || '表格数据';
+      const baseSheetName = worksheetNameInput.value || DEFAULT_WORKSHEET_NAME;
       const hasHeaders = hasHeadersCheckbox.checked;
       
       // 创建工作表名称数组
@@ -507,7 +573,7 @@ const MD2Excel = (function() {
       exportTablesToExcel(tableData, `${baseFilename}.xlsx`, sheetNames, hasHeaders);
     } catch (error) {
       console.error('导出多表格Excel失败:', error);
-      alert('导出Excel失败: ' + error.message);
+      showMessage('导出Excel失败: ' + error.message);
     }
   }
   
@@ -575,9 +641,9 @@ const MD2Excel = (function() {
       
       // 显示成功消息
       if (tables.length > 1) {
-        alert(`已成功导出包含 ${tables.length} 个工作表的Excel文件`);
+        showMessage(`已成功导出包含 ${tables.length} 个工作表的Excel文件`);
       } else {
-        alert('表格已成功导出为Excel文件');
+        showMessage('表格已成功导出为Excel文件');
       }
     });
   }
@@ -597,7 +663,8 @@ const MD2Excel = (function() {
   // 公开API
   return {
     init,
-    processMarkdown
+    processMarkdown,
+    reset
   };
 })();
 

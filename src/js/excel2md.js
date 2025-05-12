@@ -6,10 +6,11 @@ const Excel2MD = (function() {
   let excelData = null;
   let excelDropzone;
   let excelFileInput;
-  let worksheetIndexInput;
   let excelHasHeadersCheckbox;
+  let mdFilenameInput;
   let convertToMdBtn;
   let mdOutputContainer;
+  let currentWorksheets = []; // 存储所有工作表信息
   
   /**
    * 初始化模块
@@ -18,10 +19,13 @@ const Excel2MD = (function() {
     // 获取DOM元素
     excelDropzone = document.getElementById('excelDropzone');
     excelFileInput = document.getElementById('excelFileInput');
-    worksheetIndexInput = document.getElementById('worksheetIndex');
     excelHasHeadersCheckbox = document.getElementById('excelHasHeaders');
+    mdFilenameInput = document.getElementById('mdFilename');
     convertToMdBtn = document.getElementById('convertToMdBtn');
     mdOutputContainer = document.getElementById('mdOutput');
+    
+    // 重置数据
+    reset();
     
     // 绑定事件
     if (convertToMdBtn) {
@@ -30,6 +34,41 @@ const Excel2MD = (function() {
     
     if (excelDropzone && excelFileInput) {
       setupFileUpload();
+    }
+  }
+  
+  /**
+   * 重置模块数据
+   */
+  function reset() {
+    // 清空数据
+    excelData = null;
+    currentWorksheets = [];
+    
+    // 重置复选框
+    if (excelHasHeadersCheckbox) excelHasHeadersCheckbox.checked = true;
+    
+    // 重置文件名输入
+    if (mdFilenameInput) mdFilenameInput.value = 'table_data';
+    
+    // 禁用转换按钮
+    if (convertToMdBtn) convertToMdBtn.disabled = true;
+    
+    // 清空文件输入
+    if (excelFileInput) excelFileInput.value = '';
+    
+    // 重置输出区域
+    if (mdOutputContainer) {
+      mdOutputContainer.innerHTML = `
+        <div class="instruction">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <p>在左侧上传 Excel 文件以查看结果</p>
+        </div>
+      `;
     }
   }
   
@@ -112,21 +151,16 @@ const Excel2MD = (function() {
             fileName: file.name
           };
           
-          // 更新工作表索引最大值
-          if (worksheetIndexInput) {
-            worksheetIndexInput.max = (sheetNames.length - 1).toString();
-            if (parseInt(worksheetIndexInput.value) >= sheetNames.length) {
-              worksheetIndexInput.value = '0';
-            }
-          }
+          // 预处理所有工作表
+          processAllWorksheets(workbook, sheetNames);
           
           // 启用转换按钮
           if (convertToMdBtn) {
             convertToMdBtn.disabled = false;
           }
           
-          // 显示工作表信息
-          showWorksheetInfo();
+          // 显示文件信息
+          showFileInfo();
         } catch (error) {
           console.error('解析Excel失败:', error);
           if (mdOutputContainer) {
@@ -151,26 +185,207 @@ const Excel2MD = (function() {
   }
   
   /**
-   * 显示工作表信息
+   * 预处理所有工作表
    */
-  function showWorksheetInfo() {
-    if (!excelData || !mdOutputContainer) return;
+  function processAllWorksheets(workbook, sheetNames) {
+    currentWorksheets = [];
     
-    const { workbook, sheetNames, fileName } = excelData;
+    sheetNames.forEach((sheetName, index) => {
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      
+      if (jsonData.length > 0) {
+        const hasHeaders = excelHasHeadersCheckbox ? excelHasHeadersCheckbox.checked : true;
+        const markdownTable = generateMarkdownTable(jsonData, hasHeaders);
+        
+        currentWorksheets.push({
+          index: index,
+          name: sheetName,
+          data: jsonData,
+          markdownTable: markdownTable
+        });
+      }
+    });
+  }
+  
+  /**
+   * 显示多表格输出
+   */
+  function showMultiTablesOutput() {
+    if (!mdOutputContainer || currentWorksheets.length === 0) return;
     
-    let infoHtml = `
-      <div class="excel-info card">
-        <h3>Excel文件信息</h3>
-        <p>文件名: ${fileName}</p>
-        <p>工作表数量: ${sheetNames.length}</p>
-        <p>可用工作表: ${sheetNames.join(', ')}</p>
+    // 构建表格标签
+    let tabsHtml = `
+      <div class="output-header">
+        <h3>检测到 ${currentWorksheets.length} 个表格</h3>
       </div>
-      <div class="instruction">
-        <p>点击"转换为Markdown"按钮以生成Markdown表格</p>
+      <div class="table-tabs">
+    `;
+    
+    currentWorksheets.forEach((sheet, index) => {
+      const isActive = index === 0 ? 'active' : '';
+      // 使用工作表名称而不是简单的编号
+      tabsHtml += `<div class="tab ${isActive}" data-index="${index}">表格 ${index + 1} - ${sheet.name}</div>`;
+    });
+    
+    tabsHtml += `</div>`;
+    
+    // 构建表格内容
+    let contentHtml = `<div class="multi-tables">`;
+    
+    currentWorksheets.forEach((sheet, index) => {
+      const isActive = index === 0 ? 'active' : '';
+      
+      // 添加表格元数据信息
+      contentHtml += `
+        <div class="tab-content ${isActive}" data-index="${index}">
+          <div class="sheet-info">
+            <div class="sheet-metadata">
+              <p><strong>工作表名称:</strong> ${sheet.name}</p>
+              <p><strong>行数:</strong> ${sheet.data.length}</p>
+              <p><strong>列数:</strong> ${sheet.data.length > 0 ? sheet.data[0].length : 0}</p>
+            </div>
+          </div>
+          <div class="preview">
+            <pre>${escapeHtml(sheet.markdownTable)}</pre>
+          </div>
+        </div>
+      `;
+    });
+    
+    contentHtml += `</div>`;
+    
+    // 添加底部按钮，删除"下载Excel表格"按钮
+    let buttonsHtml = `
+      <div class="action-buttons">
+        <button id="copyCurrentTableBtn" class="btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          复制当前表格
+        </button>
+        <button id="downloadCurrentTableBtn" class="btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          下载当前表格
+        </button>
+        <button id="downloadAllMdBtn" class="btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          下载所有MD表格
+        </button>
       </div>
     `;
     
-    mdOutputContainer.innerHTML = infoHtml;
+    // 更新DOM
+    mdOutputContainer.innerHTML = tabsHtml + contentHtml + buttonsHtml;
+    
+    // 添加事件处理
+    setupTabEventHandlers();
+  }
+  
+  /**
+   * 设置选项卡事件处理程序
+   */
+  function setupTabEventHandlers() {
+    // 选项卡切换
+    const tabs = document.querySelectorAll('.table-tabs .tab');
+    const contents = document.querySelectorAll('.multi-tables .tab-content');
+    
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const index = tab.getAttribute('data-index');
+        
+        // 切换活动选项卡
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // 切换内容
+        contents.forEach(content => {
+          content.classList.remove('active');
+          if (content.getAttribute('data-index') === index) {
+            content.classList.add('active');
+          }
+        });
+      });
+    });
+    
+    // 复制当前表格按钮
+    const copyCurrentTableBtn = document.getElementById('copyCurrentTableBtn');
+    if (copyCurrentTableBtn) {
+      copyCurrentTableBtn.addEventListener('click', () => {
+        const activeTab = document.querySelector('.table-tabs .tab.active');
+        if (activeTab) {
+          const index = parseInt(activeTab.getAttribute('data-index'));
+          if (index >= 0 && index < currentWorksheets.length) {
+            copyToClipboard(currentWorksheets[index].markdownTable, '已复制当前表格到剪贴板');
+          }
+        }
+      });
+    }
+    
+    // 下载当前表格按钮
+    const downloadCurrentTableBtn = document.getElementById('downloadCurrentTableBtn');
+    if (downloadCurrentTableBtn) {
+      downloadCurrentTableBtn.addEventListener('click', () => {
+        const activeTab = document.querySelector('.table-tabs .tab.active');
+        if (activeTab) {
+          const index = parseInt(activeTab.getAttribute('data-index'));
+          if (index >= 0 && index < currentWorksheets.length) {
+            const fileName = mdFilenameInput ? mdFilenameInput.value || 'table_data' : 'table_data';
+            const sheetName = currentWorksheets[index].name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            downloadMarkdown(currentWorksheets[index].markdownTable, `${fileName}_${sheetName}.md`);
+          }
+        }
+      });
+    }
+    
+    // 下载所有MD表格按钮
+    const downloadAllMdBtn = document.getElementById('downloadAllMdBtn');
+    if (downloadAllMdBtn) {
+      downloadAllMdBtn.addEventListener('click', () => {
+        downloadAllMarkdownTables();
+      });
+    }
+  }
+  
+  /**
+   * 下载原始Excel文件
+   */
+  function downloadExcelFile() {
+    if (!excelData || !excelData.workbook) {
+      showMessage('没有可用的Excel数据');
+      return;
+    }
+    
+    try {
+      // 获取文件名
+      const fileName = mdFilenameInput ? mdFilenameInput.value || 'table_data' : 'table_data';
+      
+      // 创建新的Excel工作簿
+      const wb = XLSX.utils.book_new();
+      
+      // 添加每个工作表
+      currentWorksheets.forEach(sheet => {
+        const ws = XLSX.utils.aoa_to_sheet(sheet.data);
+        XLSX.utils.book_append_sheet(wb, ws, sheet.name);
+      });
+      
+      // 生成Excel文件并下载
+      XLSX.writeFile(wb, `${fileName}.xlsx`);
+      
+      showMessage('已下载Excel文件');
+    } catch (error) {
+      console.error('下载Excel文件失败:', error);
+      showMessage('下载Excel文件失败: ' + error.message);
+    }
   }
   
   /**
@@ -178,41 +393,48 @@ const Excel2MD = (function() {
    */
   function convertExcelToMarkdown() {
     try {
-      // 检查DOM元素和数据
-      if (!excelData || !mdOutputContainer || !worksheetIndexInput || !excelHasHeadersCheckbox) {
-        throw new Error('Excel转换所需的DOM元素或数据未找到');
+      if (!excelData || currentWorksheets.length === 0) {
+        throw new Error('没有可用的Excel数据');
       }
       
-      const { workbook, sheetNames } = excelData;
-      const worksheetIndex = parseInt(worksheetIndexInput.value) || 0;
-      const hasHeaders = excelHasHeadersCheckbox.checked;
-      
-      if (worksheetIndex < 0 || worksheetIndex >= sheetNames.length) {
-        throw new Error(`工作表索引${worksheetIndex}超出范围（0-${sheetNames.length - 1}）`);
-      }
-      
-      // 获取指定工作表
-      const sheetName = sheetNames[worksheetIndex];
-      const worksheet = workbook.Sheets[sheetName];
-      
-      // 将工作表转换为数组
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-      
-      if (jsonData.length === 0) {
-        throw new Error('工作表不包含数据');
-      }
-      
-      // 生成Markdown表格
-      const markdownTable = generateMarkdownTable(jsonData, hasHeaders);
-      
-      // 显示生成的Markdown表格
-      renderOutput(markdownTable, jsonData);
+      // 显示多表格输出界面
+      showMultiTablesOutput();
+      showMessage(`已转换 ${currentWorksheets.length} 个工作表为Markdown表格`);
     } catch (error) {
       console.error('转换Excel失败:', error);
       if (mdOutputContainer) {
         mdOutputContainer.innerHTML = `<div class="error">${error.message}</div>`;
       }
     }
+  }
+  
+  /**
+   * 显示文件信息
+   */
+  function showFileInfo() {
+    if (!excelData || !mdOutputContainer) return;
+    
+    const { fileName, sheetNames } = excelData;
+    
+    let infoHtml = `
+      <div class="output-header">
+        <h3>Excel文件信息</h3>
+      </div>
+      <div class="sheet-info">
+        <div class="sheet-metadata">
+          <p><strong>文件名:</strong> ${fileName}</p>
+          <p><strong>可用工作表:</strong> ${sheetNames.length} 个</p>
+        </div>
+      </div>
+      <div class="instruction">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+        <p>点击"转换为Markdown"按钮生成表格</p>
+      </div>
+    `;
+    
+    mdOutputContainer.innerHTML = infoHtml;
   }
   
   /**
@@ -223,23 +445,48 @@ const Excel2MD = (function() {
       return '';
     }
     
-    // 确保所有行都有相同的列数
-    const maxCols = Math.max(...data.map(row => row.length));
-    const normalizedData = data.map(row => {
-      while (row.length < maxCols) {
-        row.push('');
-      }
-      return row;
+    // 清理数据：过滤掉空行和格式化单元格内容
+    const cleanData = data.filter(row => {
+      // 过滤掉全空的行
+      return row.some(cell => cell !== null && cell !== undefined && cell.toString().trim() !== '');
+    }).map(row => {
+      // 格式化每个单元格
+      return row.map(cell => {
+        if (cell === null || cell === undefined) return '';
+        const cellStr = cell.toString().trim();
+        // 处理单元格中的管道符号，会影响Markdown表格格式
+        return cellStr.replace(/\|/g, '\\|');
+      });
     });
     
-    // 找出每列的最大宽度
+    if (cleanData.length === 0) {
+      return '';
+    }
+    
+    // 确保所有行都有相同的列数
+    const maxCols = Math.max(...cleanData.map(row => row.length));
+    const normalizedData = cleanData.map(row => {
+      const newRow = [...row];
+      while (newRow.length < maxCols) {
+        newRow.push('');
+      }
+      return newRow;
+    });
+    
+    // 找出每列的最大宽度（限制最大宽度以避免表格过宽）
+    const MAX_COLUMN_WIDTH = 30; // 最大列宽
     const columnWidths = Array(maxCols).fill(0);
+    
     for (const row of normalizedData) {
       for (let i = 0; i < row.length; i++) {
         const cell = row[i];
         const cellStr = cell !== null && cell !== undefined ? cell.toString() : '';
-        if (cellStr.length > columnWidths[i]) {
-          columnWidths[i] = cellStr.length;
+        const displayLength = cellStr.length;
+        
+        if (displayLength > columnWidths[i] && displayLength <= MAX_COLUMN_WIDTH) {
+          columnWidths[i] = displayLength;
+        } else if (displayLength > MAX_COLUMN_WIDTH) {
+          columnWidths[i] = MAX_COLUMN_WIDTH;
         }
       }
     }
@@ -257,15 +504,21 @@ const Excel2MD = (function() {
     for (let i = 0; i < maxCols; i++) {
       const headerValue = hasHeaders && normalizedData[0] && i < normalizedData[0].length ? 
         normalizedData[0][i] : 
-        `Column ${i + 1}`;
+        `列 ${i + 1}`;
       const headerStr = headerValue !== null && headerValue !== undefined ? headerValue.toString() : '';
-      markdownTable += headerStr.padEnd(columnWidths[i]) + ' | ';
+      // 如果标题太长，截断并添加省略号
+      const displayHeader = headerStr.length > MAX_COLUMN_WIDTH ? 
+        headerStr.substring(0, MAX_COLUMN_WIDTH - 3) + '...' : 
+        headerStr;
+      
+      markdownTable += displayHeader.padEnd(columnWidths[i]) + ' | ';
     }
     markdownTable += '\n';
     
     // 添加分隔行
     markdownTable += '| ';
     for (let i = 0; i < maxCols; i++) {
+      // 使用冒号指示对齐方式，默认为左对齐
       markdownTable += '-'.repeat(columnWidths[i]) + ' | ';
     }
     markdownTable += '\n';
@@ -279,7 +532,13 @@ const Excel2MD = (function() {
           normalizedData[rowIndex][i] : 
           '';
         const cellStr = cellValue !== null && cellValue !== undefined ? cellValue.toString() : '';
-        markdownTable += cellStr.padEnd(columnWidths[i]) + ' | ';
+        
+        // 如果单元格内容太长，截断并添加省略号
+        const displayCell = cellStr.length > MAX_COLUMN_WIDTH ? 
+          cellStr.substring(0, MAX_COLUMN_WIDTH - 3) + '...' : 
+          cellStr;
+        
+        markdownTable += displayCell.padEnd(columnWidths[i]) + ' | ';
       }
       markdownTable += '\n';
     }
@@ -291,43 +550,34 @@ const Excel2MD = (function() {
    * 渲染输出
    */
   function renderOutput(markdownTable, tableData) {
-    if (!markdownTable || !mdOutputContainer) {
-      return;
-    }
+    if (!mdOutputContainer) return;
     
-    // 创建HTML预览
-    // 假设有一个简单的markdown解析函数，这里简化处理
-    const htmlPreview = parseMarkdownTable(markdownTable);
+    const fileName = mdFilenameInput ? mdFilenameInput.value || 'table_data' : 'table_data';
     
-    let outputHtml = `
-      <div class="markdown-result">
-        <div class="card">
-          <h3>Markdown代码</h3>
+    const outputHtml = `
+      <div class="preview">
           <pre>${escapeHtml(markdownTable)}</pre>
         </div>
-        
-        <div class="card mt-4">
-          <h3>预览</h3>
-          <div class="preview">${htmlPreview}</div>
-        </div>
-        
-        <div class="btn-group mt-4">
-          <button id="copyMarkdownBtn" class="btn">复制Markdown代码</button>
-          <button id="copyHtmlBtn" class="btn">复制HTML表格</button>
-        </div>
+      <div class="btn-group">
+        <button onclick="Excel2MD.copyToClipboard(\`${markdownTable.replace(/`/g, '\\`')}\`, '已复制到剪贴板')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          复制 Markdown
+        </button>
+        <button onclick="Excel2MD.downloadMarkdown(\`${markdownTable.replace(/`/g, '\\`')}\`, '${fileName}.md')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          下载 Markdown 文件
+        </button>
       </div>
     `;
     
     mdOutputContainer.innerHTML = outputHtml;
-    
-    // 添加复制按钮事件
-    document.getElementById('copyMarkdownBtn').addEventListener('click', () => {
-      copyToClipboard(markdownTable, '已复制Markdown代码到剪贴板');
-    });
-    
-    document.getElementById('copyHtmlBtn').addEventListener('click', () => {
-      copyToClipboard(htmlPreview, '已复制HTML表格到剪贴板');
-    });
   }
   
   /**
@@ -383,29 +633,72 @@ const Excel2MD = (function() {
   }
   
   /**
-   * 复制内容到剪贴板
+   * 将文本复制到剪贴板
    */
-  function copyToClipboard(text, successMessage) {
+  function copyToClipboard(text, successMessage = '已复制到剪贴板') {
     try {
+      // 检查是否支持navigator.clipboard
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+          showMessage(successMessage);
+        }).catch(err => {
+          console.error('复制失败:', err);
+          fallbackCopyToClipboard(text, successMessage);
+        });
+      } else {
+        fallbackCopyToClipboard(text, successMessage);
+      }
+    } catch (error) {
+      console.error('复制到剪贴板失败:', error);
+      alert('复制失败: ' + error.message);
+    }
+  }
+  
+  /**
+   * 备用的复制剪贴板方案
+   */
+  function fallbackCopyToClipboard(text, successMessage) {
       const textarea = document.createElement('textarea');
       textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
       document.body.appendChild(textarea);
       textarea.select();
       
+    try {
       const successful = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      
       if (successful) {
-        alert(successMessage);
+        showMessage(successMessage);
       } else {
-        throw new Error('复制操作失败');
+        throw new Error('复制命令执行失败');
       }
-    } catch (error) {
-      console.error('复制失败:', error);
-      alert('复制失败: ' + error.message);
-    } finally {
-      if (textarea) {
+    } catch (err) {
         document.body.removeChild(textarea);
-      }
+      console.error('fallback复制失败:', err);
+      alert('复制失败，请手动复制文本');
     }
+  }
+  
+  /**
+   * 显示消息
+   */
+  function showMessage(message) {
+    const messageElement = document.createElement('div');
+    messageElement.className = 'warning';
+    messageElement.textContent = message;
+    document.body.appendChild(messageElement);
+    
+    // 5秒后移除消息
+    setTimeout(() => {
+      messageElement.classList.add('fade-out');
+      setTimeout(() => {
+        if (messageElement.parentNode) {
+          messageElement.parentNode.removeChild(messageElement);
+        }
+      }, 1000);
+    }, 4000);
   }
   
   /**
@@ -420,11 +713,74 @@ const Excel2MD = (function() {
       .replace(/'/g, "&#039;");
   }
   
+  /**
+   * 下载Markdown文件
+   */
+  function downloadMarkdown(markdown, filename) {
+    try {
+      const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+      saveAs(blob, filename);
+    } catch (error) {
+      console.error('下载Markdown文件失败:', error);
+      alert('下载失败: ' + error.message);
+    }
+  }
+  
+  /**
+   * 下载所有Markdown表格
+   */
+  function downloadAllMarkdownTables() {
+    if (!currentWorksheets || currentWorksheets.length === 0) {
+      showMessage('无可用的表格数据');
+      return;
+    }
+    
+    try {
+      const fileName = mdFilenameInput ? mdFilenameInput.value || 'table_data' : 'table_data';
+      let zipName = `${fileName}_all_tables.zip`;
+      
+      // 使用JSZip创建zip文件
+      if (typeof JSZip === 'undefined') {
+        // 如果JSZip不可用，使用简单的文本文件下载
+        let allMarkdown = '';
+        currentWorksheets.forEach((sheet, index) => {
+          allMarkdown += `# ${sheet.name}\n\n${sheet.markdownTable}\n\n`;
+        });
+        
+        downloadMarkdown(allMarkdown, `${fileName}_all_tables.md`);
+        showMessage('已下载所有表格到单个Markdown文件');
+        return;
+      }
+      
+      // 创建新的ZIP实例
+      const zip = new JSZip();
+      
+      // 添加每个表格作为单独的文件
+      currentWorksheets.forEach((sheet, index) => {
+        const safeName = sheet.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const tableFileName = `${safeName}.md`;
+        zip.file(tableFileName, sheet.markdownTable);
+      });
+      
+      // 生成ZIP文件并下载
+      zip.generateAsync({type: 'blob'}).then(function(content) {
+        saveAs(content, zipName);
+        showMessage('已下载所有表格到ZIP文件');
+      });
+    } catch (error) {
+      console.error('下载所有表格失败:', error);
+      showMessage('下载失败: ' + error.message);
+    }
+  }
+  
   // 公开API
   return {
     init,
     handleExcelFile,
-    convertExcelToMarkdown
+    convertExcelToMarkdown,
+    copyToClipboard,
+    downloadMarkdown,
+    reset
   };
 })();
 

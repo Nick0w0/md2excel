@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="light">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Markdown表格转换工具</title>
+  <title>Markdown Table Converter</title>
   
   <!-- 引入字体 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,15 +19,26 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   
   <!-- 自定义样式 -->
-  <link rel="stylesheet" href="css/styles.css?v=1.0.1">
+  <link rel="stylesheet" href="css/styles.css?v=1.0.2">
   
   <!-- 自定义脚本 -->
-  <script src="src/js/theme.js?v=1.0.1"></script>
-  <script src="src/js/ui.js?v=1.0.1"></script>
-  <script src="src/js/md2excel.js?v=1.0.1"></script>
-  <script src="src/js/excel2md.js?v=1.0.1"></script>
+  <script src="src/js/theme.js?v=1.0.2"></script>
+  <script src="src/js/i18n.js?v=1.0.2"></script>
+  <script src="src/js/ui.js?v=1.0.2"></script>
+  <script src="src/js/md2excel.js?v=1.0.2"></script>
+  <script src="src/js/excel2md.js?v=1.0.2"></script>
 </head>
 <body>
+  <!-- 语言切换按钮 -->
+  <button id="languageSwitchBtn" class="lang-switch" aria-label="切换语言" style="position: fixed; bottom: 1.5rem; right: 5rem; width: 2.8rem; height: 2.8rem; border-radius: 50%; background-color: rgba(255, 255, 255, 0.9); border: 1px solid rgba(59, 130, 246, 0.5); color: #3b82f6; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 9999; padding: 0; transition: all 0.3s ease;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);">
+      <circle cx="12" cy="12" r="10"></circle>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+      <line x1="2" y1="12" x2="22" y2="12"></line>
+    </svg>
+    <span class="lang-indicator" style="position: absolute; bottom: 0.45rem; font-size: 0.65rem; font-weight: bold; color: #3b82f6; line-height: 1;">EN</span>
+  </button>
+
   <div class="container">
     <header>
       <div class="logo-container">
@@ -40,9 +51,9 @@
             <polyline points="10 9 9 9 8 9"></polyline>
           </svg>
         </div>
-        <h1>Markdown表格转换工具</h1>
+        <h1>Markdown Table Converter</h1>
       </div>
-      <p class="subtitle">轻松在 Markdown 与 Excel 表格之间转换</p>
+      <p class="subtitle">Easily convert between Markdown and Excel tables</p>
       
       <div class="tabs">
         <div id="md2excelTab" class="tab">
@@ -70,7 +81,7 @@
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
               </svg>
-              输入
+              Input
             </h2>
             
             <div id="dropzone" class="dropzone">
@@ -79,41 +90,42 @@
                 <polyline points="17 8 12 3 7 8"></polyline>
                 <line x1="12" y1="3" x2="12" y2="15"></line>
               </svg>
-              <p>拖放 Markdown 文件或点击此处上传</p>
+              <p>Drop Markdown file or click to upload</p>
+              <p class="dropzone-hint">Supports .md and .txt formats, can handle single or multiple tables</p>
               <input type="file" id="fileInput" accept=".md,.txt" class="hidden" />
             </div>
             
-            <textarea id="markdownInput" placeholder="在此粘贴 Markdown 表格内容..."></textarea>
+            <textarea id="markdownInput" placeholder="Paste Markdown table content here..."></textarea>
             
             <div class="form-controls">
               <div class="options-group">
-                <h3>选项</h3>
+                <h3>Options</h3>
                 <div class="checkbox-group">
                   <input type="checkbox" id="hasHeaders" checked />
-                  <label for="hasHeaders">第一行作为表头</label>
+                  <label for="hasHeaders">Use first row as header</label>
                 </div>
                 
                 <div class="checkbox-group">
                   <input type="checkbox" id="skipHeaderSeparator" checked />
-                  <label for="skipHeaderSeparator">跳过分隔行（---|---）</label>
+                  <label for="skipHeaderSeparator">Skip separator row (---|---)</label>
                 </div>
                 
                 <div class="checkbox-group">
                   <input type="checkbox" id="multiTableMode" />
-                  <label for="multiTableMode">多表格模式（检测多个表格并分别放入不同工作表）</label>
+                  <label for="multiTableMode">Multi-table mode (detect multiple tables and put them in different worksheets)</label>
                 </div>
               </div>
               
               <div class="options-group">
-                <h3>输出设置</h3>
+                <h3>Output Settings</h3>
                 <div class="form-group">
-                  <label for="excelFilename">Excel 文件名</label>
+                  <label for="excelFilename">Excel filename</label>
                   <input type="text" id="excelFilename" value="table_data" />
                 </div>
                 
                 <div class="form-group">
-                  <label for="worksheetName">工作表名称</label>
-                  <input type="text" id="worksheetName" value="表格数据" />
+                  <label for="worksheetName">Worksheet name</label>
+                  <input type="text" id="worksheetName" value="Table Data" />
                 </div>
               </div>
               
@@ -121,7 +133,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polygon points="5 3 19 12 5 21 5 3"></polygon>
                 </svg>
-                处理
+                Process
               </button>
             </div>
           </div>
@@ -131,7 +143,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
               </svg>
-              输出
+              Output
             </h2>
             <div id="output">
               <div class="instruction">
@@ -140,7 +152,7 @@
                   <line x1="12" y1="16" x2="12" y2="12"></line>
                   <line x1="12" y1="8" x2="12.01" y2="8"></line>
                 </svg>
-                <p>在左侧输入 Markdown 表格内容以查看结果</p>
+                <p>Enter Markdown table content on the left to see results</p>
               </div>
             </div>
           </div>
@@ -159,7 +171,7 @@
                 <line x1="16" y1="17" x2="8" y2="17"></line>
                 <polyline points="10 9 9 9 8 9"></polyline>
               </svg>
-              输入
+              Input
             </h2>
             
             <div id="excelDropzone" class="dropzone">
@@ -168,21 +180,25 @@
                 <polyline points="17 8 12 3 7 8"></polyline>
                 <line x1="12" y1="3" x2="12" y2="15"></line>
               </svg>
-              <p>拖放 Excel 文件或点击此处上传</p>
+              <p>Drop Excel file or click to upload</p>
+              <p class="dropzone-hint">Supports .xlsx, .xls and .csv formats, can handle multiple worksheets</p>
               <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" class="hidden" />
             </div>
             
             <div class="form-controls">
               <div class="options-group">
-                <h3>选项</h3>
-                <div class="form-group">
-                  <label for="worksheetIndex">工作表索引（0 开始）</label>
-                  <input type="number" id="worksheetIndex" value="0" min="0" />
-                </div>
-                
+                <h3>Options</h3>
                 <div class="checkbox-group">
                   <input type="checkbox" id="excelHasHeaders" checked />
-                  <label for="excelHasHeaders">第一行作为表头</label>
+                  <label for="excelHasHeaders">Use first row as header</label>
+                </div>
+              </div>
+              
+              <div class="options-group">
+                <h3>Output Settings</h3>
+                <div class="form-group">
+                  <label for="mdFilename">Markdown filename</label>
+                  <input type="text" id="mdFilename" value="table_data" />
                 </div>
               </div>
               
@@ -190,7 +206,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polygon points="5 3 19 12 5 21 5 3"></polygon>
                 </svg>
-                转换为 Markdown
+                Convert to Markdown
               </button>
             </div>
           </div>
@@ -200,7 +216,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
               </svg>
-              输出
+              Output
             </h2>
             <div id="mdOutput">
               <div class="instruction">
@@ -209,7 +225,7 @@
                   <line x1="12" y1="16" x2="12" y2="12"></line>
                   <line x1="12" y1="8" x2="12.01" y2="8"></line>
                 </svg>
-                <p>在左侧上传 Excel 文件以查看结果</p>
+                <p>Upload Excel file on the left to see results</p>
               </div>
             </div>
           </div>
@@ -218,11 +234,11 @@
     </main>
     
     <footer>
-      <p>使用 <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript" target="_blank" rel="noopener noreferrer">JavaScript</a>, <a href="https://github.com/exceljs/exceljs" target="_blank" rel="noopener noreferrer">ExcelJS</a> 和 <a href="https://github.com/eligrey/FileSaver.js" target="_blank" rel="noopener noreferrer">FileSaver.js</a> 构建</p>
+      <p>Built with <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript" target="_blank" rel="noopener noreferrer">JavaScript</a>, <a href="https://github.com/exceljs/exceljs" target="_blank" rel="noopener noreferrer">ExcelJS</a> and <a href="https://github.com/eligrey/FileSaver.js" target="_blank" rel="noopener noreferrer">FileSaver.js</a></p>
       <div class="footer-links">
-        <a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/md2excel/md2excel" target="_blank" rel="noopener noreferrer">GitHub</a>
         <span class="divider">|</span>
-        <a href="#" id="aboutLink">关于</a>
+        <a href="#" id="aboutLink">About</a>
       </div>
     </footer>
   </div>
@@ -230,16 +246,16 @@
   <!-- 关于对话框 -->
   <div id="aboutDialog" class="dialog hidden">
     <div class="dialog-content">
-      <h2>关于 Markdown 表格转换工具</h2>
-      <p>这是一个纯前端应用，支持在 Markdown 表格和 Excel 表格之间进行转换。</p>
-      <p>功能特性：</p>
+      <h2>About Markdown Table Converter</h2>
+      <p>This is a pure frontend application for converting between Markdown tables and Excel tables.</p>
+      <p>Features:</p>
       <ul>
-        <li>Markdown 转 Excel，支持多表格</li>
-        <li>Excel 转 Markdown，支持选择工作表</li>
-        <li>明暗主题切换，响应系统设置</li>
-        <li>完全基于浏览器处理，无服务器需求</li>
+        <li>Markdown to Excel, supporting multiple tables</li>
+        <li>Excel to Markdown, supporting worksheet selection</li>
+        <li>Light/dark theme toggle, responding to system settings</li>
+        <li>Completely browser-based processing, no server requirements</li>
       </ul>
-      <button id="closeAboutBtn" class="btn">关闭</button>
+      <button id="closeAboutBtn" class="btn">Close</button>
     </div>
   </div>
   

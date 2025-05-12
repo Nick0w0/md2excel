@@ -1,17 +1,29 @@
 {
   "name": "md2excel",
   "version": "1.0.0",
-  "description": "Markdown表格与Excel互相转换工具",
+  "description": "Markdown表格与Excel互相转换工具 - 纯前端实现",
   "main": "index.html",
   "scripts": {
     "start": "http-server -p 8080 -c-1 -o",
-    "build": "uglifyjs src/js/md2excel.js src/js/excel2md.js -o js/app.min.js"
+    "build": "uglifyjs src/js/theme.js src/js/ui.js src/js/md2excel.js src/js/excel2md.js -o dist/app.min.js"
   },
-  "keywords": ["markdown", "excel", "table", "converter"],
-  "author": "",
+  "keywords": ["markdown", "excel", "table", "converter", "markdown-to-excel", "excel-to-markdown"],
+  "author": "MD2Excel Contributors",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Nick0w0/md2excel.git"
+  },
+  "homepage": "https://github.com/Nick0w0/md2excel",
+  "bugs": {
+    "url": "https://github.com/Nick0w0/md2excel/issues"
+  },
   "devDependencies": {
     "http-server": "^14.1.1",
     "uglify-js": "^3.17.4"
-  }
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "private": false
 } 
